@@ -1,4 +1,3 @@
-# Moved to tools/report_tools.py — this file is no longer used.
 """
 Report Tools
 ============
@@ -13,11 +12,24 @@ and generate whichever formats you need.
 """
 from __future__ import annotations
 
+import html as _html
 import re
 from datetime import datetime
 from pathlib import Path
 
 from .. import shared_state
+
+
+def _validate_output_path(filename: str) -> tuple[Path, str | None]:
+    """Returns (path, None) on success, or (path, error_str) if the path looks unsafe."""
+    path = Path(filename)
+    depth = sum(1 for part in path.parts if part == "..")
+    if depth > 2:
+        return path, (
+            f"Unsafe output path '{filename}': too many parent directory traversals. "
+            "Please use a path within or near the current directory."
+        )
+    return path, None
 
 # ── Brand palette (shared across all formats) ─────────────────────────────────
 BRAND_DARK   = "1F3864"
@@ -399,7 +411,9 @@ def generate_audit_report(output_filename: str = "gtm_audit_report.docx") -> str
     p.runs[0].font.color.rgb = _rgb(TEXT_MUTED)
 
     # Save ────────────────────────────────────────────────────────────────────
-    out = Path(output_filename)
+    out, err = _validate_output_path(output_filename)
+    if err:
+        return err
     doc.save(out)
     shared_state.add_report_path(str(out))
 
@@ -484,12 +498,7 @@ def generate_html_report(output_filename: str = "") -> str:
         return "\n".join(rows)
 
     def _esc(text: str) -> str:
-        return (
-            text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace('"', "&quot;")
-        )
+        return _html.escape(str(text))
 
     def _section(title: str, icon: str, count: int, items: list, row_class: str, section_id: str) -> str:
         badge_class = "badge-critical" if "Critical" in title else (
@@ -953,7 +962,9 @@ def generate_html_report(output_filename: str = "") -> str:
 </body>
 </html>"""
 
-    out = Path(output_filename)
+    out, err = _validate_output_path(output_filename)
+    if err:
+        return err
     out.write_text(html, encoding="utf-8")
     shared_state.add_report_path(str(out))
 
@@ -1151,7 +1162,9 @@ def generate_markdown_report(output_filename: str = "") -> str:
 *Container: {meta['name']} ({meta['id']}) — {month_year}*
 """
 
-    out = Path(output_filename)
+    out, err = _validate_output_path(output_filename)
+    if err:
+        return err
     out.write_text(md, encoding="utf-8")
     shared_state.add_report_path(str(out))
 

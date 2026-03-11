@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l *.py)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python -m google.adk --version)",
+      "Bash(pip show google-adk)",
+      "Bash(powershell -Command \"Rename-Item -Path ''C:\\\\dev\\\\gtm-analyst\\\\gtm-analyst-1'' -NewName ''gtm_analyst'' -Force\")",
+      "Bash(powershell -Command \"& { $handles = \\(Get-Process | Where-Object { $_MainWindowHandle -ne 0 -or $_Name -match ''code|node|python|cmd|powershell'' } | Select-Object Id, Name, @{N=''Modules'';E={try{$_Modules.FileName}catch{''''}}}\\) | Where-Object { $_Modules -match ''gtm-analyst-1'' }; $handles }\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object { $_Name -match ''code|node|python|adk'' } | Select-Object Id, Name, Path | Format-Table -AutoSize\")",
+      "Bash(powershell.exe -NoProfile -NonInteractive -Command \"Rename-Item -Path ''C:\\\\dev\\\\gtm-analyst\\\\gtm-analyst-1'' -NewName ''gtm_analyst''\")",
+      "Bash(adk run)",
+      "Bash(python -m google.adk run gtm_analyst)",
+      "Bash(where adk)",
+      "Bash(python -c \"import google.adk; print\\(google.adk.__file__\\)\")",
+      "Bash(python /c/dev/gtm-analyst/gtm_analyst/.venv/Scripts/adk-script.py --help)",
+      "Bash(/c/dev/gtm-analyst/gtm_analyst/.venv/Scripts/adk.exe run gtm_analyst)",
+      "Bash(/c/dev/gtm-analyst/gtm_analyst/.venv/Scripts/adk run gtm_analyst)",
+      "Bash(cmd.exe /c \"cd C:\\\\dev\\\\gtm-analyst && C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\adk.exe run gtm_analyst 2>&1\")",
+      "Bash(cmd.exe /c \"cd C:\\\\dev\\\\gtm-analyst && C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\activate.bat && adk run gtm_analyst 2>&1\")",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(cmd.exe /c \"C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\pip.exe show google-adk 2>&1 | findstr Version\")",
+      "Bash(cmd.exe /c \"C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\pip.exe show google-adk\")",
+      "Bash(cmd.exe /c \"C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\python.exe -c \"\"import google.adk; print\\(google.adk.__version__\\)\"\"\")",
+      "Bash(cmd.exe /c \"C:\\\\dev\\\\gtm-analyst\\\\gtm_analyst\\\\.venv\\\\Scripts\\\\python.exe -m pip show google-adk 2>&1\")",
+      "Bash(/c/dev/gtm-analyst/gtm_analyst/.venv/Scripts/python.exe -m pip show google-adk)",
+      "Bash(\"C:\\\\dev\\\\gtm-analyst\\\\.venv\\\\Scripts\\\\python.exe\" -m pip show google-adk)",
+      "Bash(\"C:\\\\dev\\\\gtm-analyst\\\\.venv\\\\Scripts\\\\python.exe\" -m pip show google-genai)"
+    ]
+  }
+}

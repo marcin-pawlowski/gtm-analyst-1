@@ -23,8 +23,10 @@ def _load() -> dict:
     if _STATE_FILE.exists():
         try:
             return json.loads(_STATE_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+        except json.JSONDecodeError:
+            pass  # state file is corrupt — fall through to defaults
+        except OSError:
+            pass  # state file is unreadable — fall through to defaults
     return dict(_DEFAULTS)
 
 
@@ -49,10 +51,6 @@ def set_gtm_data(filename: str, data: dict) -> None:
 
 def get_gtm_data() -> dict | None:
     return _load().get("gtm_data")
-
-
-def get_filename() -> str | None:
-    return _load().get("filename")
 
 
 # ── Analysis ──────────────────────────────────────────────────────────────────

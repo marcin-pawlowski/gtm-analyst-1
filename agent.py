@@ -26,8 +26,44 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 from google.adk.agents import Agent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.llm_request import LlmRequest
+from google.genai import types as genai_types
 
 from .tools.file_tools import list_gtm_files, load_gtm_file, load_gtm_from_content
+
+
+def _convert_json_uploads(callback_context: CallbackContext, llm_request: LlmRequest):
+    """Convert uploaded JSON files to text before sending to Gemini.
+
+    Gemini doesn't support application/json as a multimodal MIME type.
+    When a user uploads a .json file in the ADK web UI, ADK embeds it as an
+    inline_data Part — which causes a 500 error. This callback intercepts
+    the request and replaces those Parts with plain-text equivalents so the
+    agent can read the file content normally.
+    """
+    for content in llm_request.contents:
+        if not content.parts:
+            continue
+        new_parts = []
+        for part in content.parts:
+            if (
+                part.inline_data is not None
+                and part.inline_data.mime_type is not None
+                and "json" in part.inline_data.mime_type.lower()
+            ):
+                data = part.inline_data.data
+                json_text = (
+                    data.decode("utf-8") if isinstance(data, (bytes, bytearray))
+                    else str(data)
+                )
+                name = part.inline_data.display_name or "uploaded_file.json"
+                new_parts.append(
+                    genai_types.Part.from_text(text=f"[Uploaded file: {name}]\n{json_text}")
+                )
+            else:
+                new_parts.append(part)
+        content.parts = new_parts
 from .tools.analyzer_tools import (
     get_container_statistics,
     audit_tags,
@@ -47,7 +83,8 @@ from .tools.report_tools import (
 # ── Sub-agent 1: File Reader ───────────────────────────────────────────────────
 file_reader_agent = Agent(
     name="file_reader",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
+    before_model_callback=_convert_json_uploads,
     description=(
         "Handles GTM container file operations: "
         "listing available JSON files, loading from a file path, "
@@ -64,13 +101,16 @@ YOUR JOB:
    c. From pasted JSON in the chat → use load_gtm_from_content(json_content)
 
 LOADING FROM THE CHAT (method c):
-When the user pastes JSON content directly into the message, extract the full
-JSON text and call load_gtm_from_content() with that text.
+When the user pastes JSON content directly into the message, OR uploads a
+.json file via the attachment button, the JSON text will appear in the message
+prefixed with "[Uploaded file: ...]" or inline. Extract the full JSON text
+and call load_gtm_from_content() with that text.
 The user might say things like:
   - "Here is my GTM JSON: {...}"
   - "Load this" (with JSON pasted below)
   - "I'm uploading the content now"
-In all cases, take the pasted JSON text and pass it to load_gtm_from_content().
+  - They attach a .json file using the upload button
+In all cases, take the JSON text and pass it to load_gtm_from_content().
 
 WORKFLOW:
 1. If the user provides a file path, call load_gtm_file(filepath).
@@ -94,7 +134,8 @@ RULES:
 # ── Sub-agent 2: GTM Analyzer ──────────────────────────────────────────────────
 analyzer_agent = Agent(
     name="gtm_analyzer",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
+    before_model_callback=_convert_json_uploads,
     description=(
         "Performs a comprehensive audit of the loaded GTM container. "
         "Checks tags, triggers, variables, and consent configuration."
@@ -148,7 +189,8 @@ RULES:
 # ── Sub-agent 3: Report Maker ──────────────────────────────────────────────────
 report_maker_agent = Agent(
     name="report_maker",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
+    before_model_callback=_convert_json_uploads,
     description=(
         "Generates professional audit reports in three formats: "
         ".docx (Word), .html (browser/print), and .md (Markdown for AI chats)."
@@ -192,7 +234,7 @@ RULES:
 - Always collect author details before generating — covers require them.
 - If analysis hasn't been run, tell the user to ask the gtm_analyzer first.
 - Never run analysis yourself.
-- Default filename pattern: GTM_Audit_{ContainerID}_{date}.{ext}
+- Default filename pattern: GTM_Audit
 """,
     tools=[
         set_report_author,
@@ -206,7 +248,8 @@ RULES:
 # ── Root Orchestrator ──────────────────────────────────────────────────────────
 root_agent = Agent(
     name="gtm_analyst",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
+    before_model_callback=_convert_json_uploads,
     description="GTM audit orchestrator. Coordinates loading, analysis, and report generation.",
     instruction="""
 You are the lead GTM audit consultant. You coordinate a specialised team of

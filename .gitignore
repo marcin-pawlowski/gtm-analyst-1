@@ -1,0 +1,21 @@
+# Environment
+.env
+
+# Runtime state
+.gtm_audit_state.json
+
+# Generated reports
+*.docx
+*.html
+*.md
+!README.md
+
+# ADK / Google output artefacts
+mnt/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/

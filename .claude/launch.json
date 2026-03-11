@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "adk-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd .. && adk web"],
+      "port": 8000
+    },
+    {
+      "name": "adk-run",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd .. && adk run gtm_analyst"]
+    }
+  ]
+}
